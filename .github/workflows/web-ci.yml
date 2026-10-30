@@ -20,13 +20,16 @@ concurrency:
 
 jobs:
   format-lint-typecheck-build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.repository == 'foxion37/oh-my-openagent' && github.ref == 'refs/heads/dev' && contains(fromJSON('["push","workflow_dispatch","schedule"]'), github.event_name) && 'mac-mini-linux-arm64' || 'ubuntu-latest' }}
     defaults:
       run:
         working-directory: packages/web
     steps:
       - uses: actions/checkout@v5
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3.12"
@@ -38,9 +41,9 @@ jobs:
         uses: actions/cache@v5
         with:
           path: packages/web/.next/cache
-          key: ${{ runner.os }}-web-next-${{ hashFiles('packages/web/bun.lock', 'packages/web/package.json', 'packages/web/next.config.ts', 'packages/web/open-next.config.ts', 'packages/web/postcss.config.mjs') }}-${{ hashFiles('packages/web/app/**', 'packages/web/components/**', 'packages/web/lib/**', 'packages/web/messages/**', 'packages/web/i18n/**', 'docs/**') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-web-next-${{ hashFiles('packages/web/bun.lock', 'packages/web/package.json', 'packages/web/next.config.ts', 'packages/web/open-next.config.ts', 'packages/web/postcss.config.mjs') }}-${{ hashFiles('packages/web/app/**', 'packages/web/components/**', 'packages/web/lib/**', 'packages/web/messages/**', 'packages/web/i18n/**', 'docs/**') }}
           restore-keys: |
-            ${{ runner.os }}-web-next-${{ hashFiles('packages/web/bun.lock', 'packages/web/package.json', 'packages/web/next.config.ts', 'packages/web/open-next.config.ts', 'packages/web/postcss.config.mjs') }}-
+            ${{ runner.os }}-${{ runner.arch }}-web-next-${{ hashFiles('packages/web/bun.lock', 'packages/web/package.json', 'packages/web/next.config.ts', 'packages/web/open-next.config.ts', 'packages/web/postcss.config.mjs') }}-
 
       - name: Generate docs content from repo-root docs/
         run: node ./scripts/generate-docs-content.mjs
