@@ -74,7 +74,8 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   test:
-    runs-on: ${{ github.repository == 'foxion37/oh-my-openagent' && github.ref == 'refs/heads/dev' && contains(fromJSON('["push","workflow_dispatch","schedule"]'), github.event_name) && matrix.os == 'ubuntu-latest' && 'mac-mini-linux-arm64' || matrix.os }}
+    # The root suite has reproducible mock-isolation failures on Linux ARM64.
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
