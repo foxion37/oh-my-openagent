@@ -145,8 +145,11 @@ describe("test workflows", () => {
     const workflow = readFileSync(ciWorkflowPath, "utf8")
 
     // #when
-    const hasCrossOsMatrix = workflow.includes("os: [ubuntu-latest, macos-latest, windows-latest]")
-    const hasMatrixRunner = workflow.includes("runs-on: ${{ matrix.os }}")
+    const testJob = sliceWorkflowSection(workflow, "  test:", "  typecheck:")
+    const hasCrossOsMatrix = testJob.includes("os: [ubuntu-latest, macos-latest, windows-latest]")
+    const guardedArmRunner =
+      "runs-on: ${{ github.repository == 'foxion37/oh-my-openagent' && github.ref == 'refs/heads/dev' && contains(fromJSON('[\"push\",\"workflow_dispatch\",\"schedule\"]'), github.event_name) && matrix.os == 'ubuntu-latest' && 'mac-mini-linux-arm64' || matrix.os }}"
+    const hasMatrixRunner = testJob.includes("runs-on: ${{ matrix.os }}") || testJob.includes(guardedArmRunner)
 
     // #then
     expect(hasCrossOsMatrix, "CI root checks must cover Linux, macOS, and Windows").toBe(true)
