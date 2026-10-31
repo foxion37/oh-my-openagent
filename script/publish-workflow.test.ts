@@ -79,6 +79,15 @@ describe("test workflows", () => {
     )
     expect(mainTestCommand).toBeDefined()
 
+    // Bun's CLI ignore patterns replace, rather than extend, bunfig.toml.
+    // Preserve the excluded upstream and separately tested package suites.
+    const bunfig = Bun.TOML.parse(readFileSync(new URL("../bunfig.toml", import.meta.url), "utf8")) as {
+      test: { pathIgnorePatterns: string[] }
+    }
+    for (const pattern of bunfig.test.pathIgnorePatterns) {
+      expect(mainTestCommand).toContain(`--path-ignore-patterns='${pattern}'`)
+    }
+
     for (const path of [
       "anthropic-context-window-limit-recovery/message-builder.test.ts",
       "claude-code-hooks/handlers/tool-execute-after-handler.test.ts",
