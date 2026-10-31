@@ -71,6 +71,23 @@ function readPackageScript(scriptName: string): string {
 }
 
 describe("test workflows", () => {
+  test("runs mock-heavy root test files in separate Bun processes", () => {
+    const workflow = readFileSync(ciWorkflowPath, "utf8")
+    const testJob = sliceWorkflowSection(workflow, "  test:", "  typecheck:")
+    const mainTestCommand = testJob.split("\n").find((line) =>
+      line.trimStart().startsWith("run: bun test --path-ignore-patterns="),
+    )
+    expect(mainTestCommand).toBeDefined()
+
+    for (const path of [
+      "anthropic-context-window-limit-recovery/message-builder.test.ts",
+      "claude-code-hooks/handlers/tool-execute-after-handler.test.ts",
+    ]) {
+      expect(mainTestCommand).toContain(`--path-ignore-patterns='**/${path}'`)
+      expect(testJob).toContain(`run: bun test packages/omo-opencode/src/hooks/${path}`)
+    }
+  })
+
   test("use pure bun test for workflows", () => {
     for (const workflowCheck of workflowChecks) {
       // #given
